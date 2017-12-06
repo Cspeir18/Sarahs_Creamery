@@ -1,0 +1,10 @@
+12/6/17 v0.0.1
+    login screen
+    register user
+    backendless 
+    ui
+    rewardlist-add and delete
+    flavorslist- add and delete
+    change user first/last name
+    loading animation
+    splash screen
