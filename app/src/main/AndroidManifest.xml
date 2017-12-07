@@ -12,6 +12,9 @@
         <activity android:name=".LoginActivity"
                   android:label="Login">
         </activity>
+        <activity android:name=".RewardActivity"
+                  android:label="Rewards">
+        </activity>
         <activity android:name=".MainActivity"
                   android:label="">
         </activity>
@@ -29,7 +32,7 @@
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="18"/>
 </manifest>

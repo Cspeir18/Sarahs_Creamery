@@ -12,7 +12,7 @@
         android:textColor="@color/colorBlue"
         android:textSize="30dp"
         android:textStyle="bold"
-        android:text="@string/flavor_title"
+        android:text="@string/rewards_title"
         android:id="@+id/flavor_title"
         android:gravity="center"/>
     <ListView
