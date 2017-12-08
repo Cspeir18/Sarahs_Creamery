@@ -25,11 +25,24 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
+        android:layout_centerHorizontal="true"
         android:padding="15dp"
         android:textColor="@color/colorPrimary"
         android:textSize="30dp"
         android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/qr_reward_description"/>
+        />
+    <ProgressBar
+        android:id="@+id/simpleProgressBar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:max="100"
+        android:progressTint="@color/colorPrimary"
+        android:progress="0"
+        android:padding="15dp"
+        android:layout_below="@+id/qr_reward_description"
+
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
 
     <ImageView
         android:id="@+id/img_result"

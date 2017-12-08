@@ -1,13 +1,19 @@
 package com.example.cspeir.sarahscreamery;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +46,7 @@ public class RewardFragment extends Fragment {
     Bitmap bitmap ;
     private ImageView iv;
     private Button btn;
+
     Button generateQr;
     private Reward mReward;
     public RewardFragment() {
@@ -64,10 +72,12 @@ public class RewardFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup parent, final Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fragment_reward, parent, false);
         iv  = ( ImageView ) v.findViewById(R.id.img_result);
+        final ProgressBar progressBar = (ProgressBar) v.findViewById(R.id.simpleProgressBar);
+
         final TextView rewardNameText, rewarddescriptionText, cautionText;
         rewardNameText = (TextView) v.findViewById(R.id.qr_reward_name);
         cautionText = (TextView) v.findViewById(R.id.textView);
@@ -76,27 +86,66 @@ public class RewardFragment extends Fragment {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mReward.getDirection().length() == 0){
-                    Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
-                }else {
-                    try {
-                        bitmap = TextToImageEncode(mReward.getDirection());
-                        iv.setImageBitmap(bitmap);
-                        String path = saveImage(bitmap);
-                        iv.setVisibility(View.VISIBLE);
-                        btn.setVisibility(View.GONE);
-                        cautionText.setVisibility(View.GONE);
-                         //give read write permission
+                final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                View mView = getLayoutInflater(savedInstanceState).inflate(R.layout.qr_caution, null);
+                
+                builder.setView(mView);
 
-                    } catch (WriterException e) {
-                        e.printStackTrace();
+                builder.setPositiveButton("Redeem", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(mReward.getDirection().length() == 0){
+                            Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
+                        }else {
+                            try {
+                                bitmap = TextToImageEncode(mReward.getDirection());
+                                iv.setImageBitmap(bitmap);
+                                String path = saveImage(bitmap);
+                                iv.setVisibility(View.VISIBLE);
+                                btn.setVisibility(View.GONE);
+                                cautionText.setVisibility(View.GONE);
+                                progressBar.setVisibility(View.VISIBLE);
+                                //give read write permission
+
+
+                            } catch (WriterException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
                     }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
 
-                }
+                final AlertDialog dialog = builder.create();
+                dialog.show();
             }
 
         });
-
+        ValueAnimator animator = ValueAnimator.ofInt(0, progressBar.getMax());
+        animator.setDuration(120000);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation){
+                progressBar.setProgress((Integer)animation.getAnimatedValue());
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                iv.setVisibility(View.GONE);
+                progressBar.setVisibility(View.GONE);
+                rewardNameText.setText("Reward");
+                rewarddescriptionText.setText("Expired");
+            }
+        });
+        animator.start();
         rewardNameText.setText(mReward.getRewardName());
         rewarddescriptionText.setText(mReward.getDescription());
         return v;

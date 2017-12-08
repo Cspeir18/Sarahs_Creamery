@@ -16,7 +16,7 @@
               android:layout_height="wrap_content"
               android:gravity="left"
               android:textColor="@color/colorPrimary"
-              android:textSize="25dp"
+              android:textSize="15dp"
               android:layout_below="@+id/reward_list_item_textName"
               android:textStyle="bold">
 
