@@ -88,7 +88,7 @@ public class RewardFragment extends Fragment {
             public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 View mView = getLayoutInflater(savedInstanceState).inflate(R.layout.qr_caution, null);
-                
+
                 builder.setView(mView);
 
                 builder.setPositiveButton("Redeem", new DialogInterface.OnClickListener() {
