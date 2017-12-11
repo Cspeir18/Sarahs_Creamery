@@ -2,6 +2,8 @@ package com.example.cspeir.sarahscreamery;
 
 import android.media.Image;
 
+import java.util.Date;
+
 /**
  * Created by cspeir on 11/24/2017.
  */
@@ -10,11 +12,15 @@ public class Reward {
     private String rewardName;
     private String description;
     private String direction;
+    private Date startDate;
+    private Date endDate;
     public static final String EXTRA_RELATION="org.pltw.examples.collegeapp.relation";
     public static final String EXTRA_INDEX= "org.pltw.examples.collegeapp.index";
     public Boolean shared;
     private String objectId;
     public Reward(){
+        startDate = null;
+        endDate = null;
         rewardName ="";
         description = "";
         direction = "";
@@ -56,5 +62,21 @@ public class Reward {
 
     public void setObjectId(String objectId) {
         this.objectId = objectId;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 }

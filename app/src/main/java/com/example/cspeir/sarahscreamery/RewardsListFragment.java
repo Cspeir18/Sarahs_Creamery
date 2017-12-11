@@ -29,6 +29,7 @@ import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ import java.util.List;
  */
 
 public class RewardsListFragment extends ListFragment {
-    Button newReward;
+    Button newReward, startDate, endDate;
     EditText newName, newdescription, newDirections;
     private static final String TAG = "RewardsListFragment";
     private ArrayList<Reward> mRewards;
@@ -84,6 +85,20 @@ public class RewardsListFragment extends ListFragment {
                 newdescription = (EditText) mView.findViewById(R.id.new_reward_desccription_et);
                 newName = (EditText) mView.findViewById(R.id.new_reward_et);
                 newDirections = (EditText) mView.findViewById(R.id.new_reward_directions_et);
+                startDate = (Button) mView.findViewById(R.id.start_date);
+                endDate = (Button) mView.findViewById(R.id.end_date);
+                startDate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+                endDate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
                 builder.setView(mView);
                 final AlertDialog dialog = builder.create();
                 dialog.show();
@@ -96,6 +111,7 @@ public class RewardsListFragment extends ListFragment {
                             mReward.setDescription(newdescription.getText().toString().trim());
                             mReward.setDirection(newDirections.getText().toString().trim());
                             mReward.setShared(true);
+                            mReward.setStartDate((Date)startDate.getText());
                             Backendless.Persistence.of(Reward.class).save(mReward, new AsyncCallback<Reward>() {
                                 @Override
                                 public void handleResponse(Reward response) {
@@ -171,7 +187,9 @@ public class RewardsListFragment extends ListFragment {
 
     }
     private void refreshRewardList() {
-
+        final BackendlessUser currentUser = Backendless.UserService.CurrentUser();
+        final User mUser = new User();
+        mUser.setRewardsUsed((String)currentUser.getProperty("rewardsUsed"));
         // todo: Activity 3.1.4
         DataQueryBuilder dq = DataQueryBuilder.create();
         dq.setPageSize(40);
@@ -183,7 +201,9 @@ public class RewardsListFragment extends ListFragment {
                 Log.i(TAG, "refresh success");
                 mRewards.clear();
                 for (int i = 0; i < response.size(); i++) {
-                    mRewards.add(response.get(i));
+                    if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())){
+                        mRewards.add(response.get(i));
+                    }
                 }
                 ((RewardAdapter) getListAdapter()).notifyDataSetChanged();
             }
@@ -220,5 +240,10 @@ public class RewardsListFragment extends ListFragment {
             return convertView;
 
         }
+    }
+    @Override
+    public void onResume() {
+        refreshRewardList();
+        super.onResume();
     }
 }

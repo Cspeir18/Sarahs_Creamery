@@ -61,6 +61,42 @@
         android:background="@color/colorPrimary"
         android:textColor="@color/colorAccent"
         android:text="@string/add_new_reward"
-        android:layout_below="@+id/new_reward_directions_et"/>
+        android:layout_below="@+id/date_layout"/>
+    <LinearLayout
+        android:id="@id/date_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="10"
+        android:layout_below="@+id/new_reward_directions_et"
+        android:padding="10dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/start_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/start_date"
+            android:background="@color/colorPrimary"
+            android:textSize="15dp"
+            android:layout_weight="5"
+
+            android:textColor="@color/colorAccent"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12"
+            android:layout_gravity="center"
+            android:visibility="invisible"/>
+        <Button
+            android:id="@+id/end_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/end_date"
+            android:background="@color/colorPrimary"
+            android:textSize="15dp"
+            android:layout_weight="5"
+            android:textColor="@color/colorAccent"
+            />
+    </LinearLayout>
 
 </RelativeLayout>

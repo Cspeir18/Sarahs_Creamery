@@ -8,6 +8,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center"
+    android:padding="10dp"
     android:layout_centerHorizontal="true"
     android:text="@string/warning"
     android:textColor="@color/colorPrimary"
@@ -17,8 +18,50 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="15dp"
+        android:padding="10dp"
         android:gravity="center"
         android:layout_below="@+id/warning_title"
         android:textColor="@color/colorPrimary"
         android:text="@string/warning_text"/>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:layout_below="@+id/warning_text"
+    android:orientation="horizontal"
+    android:weightSum="10"
+    >
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/cancel_btn"
+        android:textColor="@color/colorAccent"
+        android:background="@color/colorPrimary"
+        android:textSize="20dp"
+        android:padding="5dp"
+        android:layout_weight="5"
+        android:text="@string/qr_cancel"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:text="12"/>
+    <Button
+        android:padding="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/redeem_btn"
+        android:textColor="@color/colorAccent"
+        android:background="@color/colorPrimary"
+        android:textSize="20dp"
+
+        android:layout_weight="5"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/warning_text"
+        android:text="@string/qr_redeem"
+        />
+
+</LinearLayout>
+
 </RelativeLayout>

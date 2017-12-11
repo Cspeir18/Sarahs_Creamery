@@ -10,11 +10,13 @@ public class User {
     private String firstName;
     private String lastName;
     private Date birthday;
+    private String rewardsUsed;
     private Boolean admin;
     private String email;
 
     public User(){
         firstName = "";
+        rewardsUsed = "jhgjh";
         lastName = "";
         birthday = null;
         admin = false;
@@ -65,5 +67,13 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getRewardsUsed() {
+        return rewardsUsed;
+    }
+
+    public void setRewardsUsed(String rewardsUsed) {
+        this.rewardsUsed = rewardsUsed;
     }
 }

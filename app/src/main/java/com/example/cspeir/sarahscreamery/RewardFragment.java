@@ -25,6 +25,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.backendless.Backendless;
+import com.backendless.BackendlessUser;
+import com.backendless.async.callback.AsyncCallback;
+import com.backendless.exceptions.BackendlessFault;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -88,16 +92,32 @@ public class RewardFragment extends Fragment {
             public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 View mView = getLayoutInflater(savedInstanceState).inflate(R.layout.qr_caution, null);
-
+                Button redeem, cancel;
+                redeem = (Button) mView.findViewById(R.id.redeem_btn);
+                cancel = (Button) mView.findViewById(R.id.cancel_btn);
                 builder.setView(mView);
-
-                builder.setPositiveButton("Redeem", new DialogInterface.OnClickListener() {
+                final AlertDialog dialog = builder.create();
+                dialog.show();
+                redeem.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(mReward.getDirection().length() == 0){
+                    public void onClick(View v) {
+                        if (mReward.getDirection().length() == 0) {
                             Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
-                        }else {
+                        } else {
                             try {
+                                BackendlessUser currentUser = Backendless.UserService.CurrentUser();
+                                currentUser.setProperty("rewardsUsed",currentUser.getProperty("rewardsUsed")+" "+ mReward.getObjectId());
+                                Backendless.UserService.update(currentUser, new AsyncCallback<BackendlessUser>() {
+                                    @Override
+                                    public void handleResponse(BackendlessUser response) {
+
+                                    }
+
+                                    @Override
+                                    public void handleFault(BackendlessFault fault) {
+
+                                    }
+                                });
                                 bitmap = TextToImageEncode(mReward.getDirection());
                                 iv.setImageBitmap(bitmap);
                                 String path = saveImage(bitmap);
@@ -105,47 +125,49 @@ public class RewardFragment extends Fragment {
                                 btn.setVisibility(View.GONE);
                                 cautionText.setVisibility(View.GONE);
                                 progressBar.setVisibility(View.VISIBLE);
+                                dialog.dismiss();
+                                ValueAnimator animator = ValueAnimator.ofInt(0, progressBar.getMax());
+                                animator.setDuration(120000);
+                                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                    @Override
+                                    public void onAnimationUpdate(ValueAnimator animation) {
+                                        progressBar.setProgress((Integer) animation.getAnimatedValue());
+                                    }
+                                });
+                                animator.addListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        super.onAnimationEnd(animation);
+                                        iv.setVisibility(View.GONE);
+                                        progressBar.setVisibility(View.GONE);
+                                        rewardNameText.setText("Reward");
+                                        rewarddescriptionText.setText("Expired");
+                                    }
+                                });
+                                animator.start();
                                 //give read write permission
 
 
                             } catch (WriterException e) {
                                 e.printStackTrace();
                             }
-
                         }
                     }
                 });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+
+                cancel.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(View v) {
                         dialog.dismiss();
                     }
                 });
 
-                final AlertDialog dialog = builder.create();
-                dialog.show();
+
             }
 
         });
-        ValueAnimator animator = ValueAnimator.ofInt(0, progressBar.getMax());
-        animator.setDuration(120000);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation){
-                progressBar.setProgress((Integer)animation.getAnimatedValue());
-            }
-        });
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                iv.setVisibility(View.GONE);
-                progressBar.setVisibility(View.GONE);
-                rewardNameText.setText("Reward");
-                rewarddescriptionText.setText("Expired");
-            }
-        });
-        animator.start();
+
         rewardNameText.setText(mReward.getRewardName());
         rewarddescriptionText.setText(mReward.getDescription());
         return v;
