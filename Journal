@@ -1,0 +1,5 @@
+This week i started working on adding qr code capabillity to my app. First i had to figure out how to go to another screen 
+after clicking on a list item. To figure this out i looked at how i did it in TripTracker and modified it to fit my app.
+My next task was to add a Qr code that stored information. This was my most difficult task of the week. I looked up a few
+ways to do this, the first few i found didn't work. However, it finally worked and it stored my data correctly. I needed a way 
+for the Qr code to expire. So i decided to use a progress bar that ticks for a minute before the Qr code dissapears. 

@@ -8,3 +8,9 @@
     change user first/last name
     loading animation
     splash screen
+   
+12/8/17 v 0.1.1
+    qr code generated
+    progress bar for timer
+    alert dialog warning 
+    fixed deleting reward bug
