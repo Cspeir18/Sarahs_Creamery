@@ -31,6 +31,70 @@
         android:textSize="30dp"
         android:layout_alignParentTop="true"
         />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="10"
+        android:id="@+id/titles"
+        android:layout_below="@+id/qr_reward_description"
+        android:orientation="horizontal"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary"
+            android:textSize="10dp"
+            android:gravity="center"
+            android:id="@+id/start_date_hint"
+            android:layout_weight="5"
+            android:text="@string/start_date"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1111"
+            android:visibility="invisible"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/end_date"
+            android:layout_weight="5"
+            android:textSize="10dp"
+            android:gravity="center"
+            android:id="@+id/end_date_hint"
+            android:textColor="@color/colorPrimary"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="10"
+        android:layout_below="@+id/titles"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/startdate_text"
+            android:textSize="15dp"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:textColor="@color/colorPrimary"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:text="12"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/enddat_text"
+            android:textSize="15dp"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:textColor="@color/colorPrimary"/>
+    </LinearLayout>
+
     <ProgressBar
         android:id="@+id/simpleProgressBar"
         android:layout_width="fill_parent"

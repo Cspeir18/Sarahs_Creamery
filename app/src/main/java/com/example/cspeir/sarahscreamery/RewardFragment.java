@@ -14,6 +14,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by cspeir on 12/6/2017.
@@ -50,8 +52,7 @@ public class RewardFragment extends Fragment {
     Bitmap bitmap ;
     private ImageView iv;
     private Button btn;
-
-    Button generateQr;
+    TextView start, end, startHint, endHint;
     private Reward mReward;
     public RewardFragment() {
 
@@ -62,17 +63,22 @@ public class RewardFragment extends Fragment {
         super.onCreate(savedInstanceSate);
         setHasOptionsMenu(true);
         String rewardName, description, directions, objectId;
+        Date endDate, startDate;
         Intent intent = getActivity().getIntent();
         objectId = intent.getStringExtra("objectId");
         rewardName = intent.getStringExtra("rewardName");
         description = intent.getStringExtra("description");
         directions = intent.getStringExtra("directions");
+        endDate = (Date)intent.getSerializableExtra("endDate");
+        startDate = (Date)intent.getSerializableExtra("startDate");
         mReward = new Reward();
         mReward.setDirection(directions);
         mReward.setDescription(description);
         mReward.setRewardName(rewardName);
         mReward.setObjectId(objectId);
         mReward.setShared(true);
+        mReward.setStartDate(startDate);
+        mReward.setEndDate(endDate);
     }
 
     @Override
@@ -81,7 +87,10 @@ public class RewardFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_reward, parent, false);
         iv  = ( ImageView ) v.findViewById(R.id.img_result);
         final ProgressBar progressBar = (ProgressBar) v.findViewById(R.id.simpleProgressBar);
-
+        end = (TextView) v.findViewById(R.id.enddat_text);
+        start = (TextView) v.findViewById(R.id.startdate_text);
+        endHint = (TextView) v.findViewById(R.id.end_date_hint);
+        startHint = (TextView) v.findViewById(R.id.start_date_hint);
         final TextView rewardNameText, rewarddescriptionText, cautionText;
         rewardNameText = (TextView) v.findViewById(R.id.qr_reward_name);
         cautionText = (TextView) v.findViewById(R.id.textView);
@@ -123,6 +132,10 @@ public class RewardFragment extends Fragment {
                                 String path = saveImage(bitmap);
                                 iv.setVisibility(View.VISIBLE);
                                 btn.setVisibility(View.GONE);
+                                end.setVisibility(View.GONE);
+                                start.setVisibility(View.GONE);
+                                endHint.setVisibility(View.GONE);
+                                startHint.setVisibility(View.GONE);
                                 cautionText.setVisibility(View.GONE);
                                 progressBar.setVisibility(View.VISIBLE);
                                 dialog.dismiss();
@@ -170,6 +183,8 @@ public class RewardFragment extends Fragment {
 
         rewardNameText.setText(mReward.getRewardName());
         rewarddescriptionText.setText(mReward.getDescription());
+        end.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getEndDate()));
+        start.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getStartDate()));
         return v;
     }
     public String saveImage(Bitmap myBitmap) {

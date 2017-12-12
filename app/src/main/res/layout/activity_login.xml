@@ -129,7 +129,9 @@
                   android:textColor="@color/colorBlue"
                   android:text="No account yet? Create one"
                   android:gravity="center"
-                  android:textSize="16dip"/>
+                  android:textSize="16dp"
+            />
+        <requestFocus/>
 
 
     </LinearLayout>

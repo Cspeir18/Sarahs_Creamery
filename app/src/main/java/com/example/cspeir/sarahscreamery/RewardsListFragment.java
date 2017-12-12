@@ -1,12 +1,15 @@
 package com.example.cspeir.sarahscreamery;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AlertDialog;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -28,17 +31,24 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by cspeir on 11/24/2017.
  */
 
 public class RewardsListFragment extends ListFragment {
+    private static final String DIALOG_DATE = "date";
+    private static final int REQUEST_START_DATE = 1;
+    private static final int REQUEST_END_DATE = 2;
+    public static final String DATE_FORMAT = "E MM-dd-yyyy";
     Button newReward, startDate, endDate;
     EditText newName, newdescription, newDirections;
+    private Reward mReward;
     private static final String TAG = "RewardsListFragment";
     private ArrayList<Reward> mRewards;
     @Override
@@ -48,7 +58,7 @@ public class RewardsListFragment extends ListFragment {
 
         //get the value of mPublicView from the intent. By default, it will be set to false (the second parameter in the call below)
 
-
+        mReward = new Reward();
         //Create the list of trips
         mRewards = new ArrayList<Reward>();
         refreshRewardList();
@@ -90,28 +100,34 @@ public class RewardsListFragment extends ListFragment {
                 startDate.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        FragmentManager fm = getActivity().getSupportFragmentManager();
+                        DatePickerFragment dialog;
+                        dialog = DatePickerFragment.newInstance(getDateFromView(startDate), R.string.start_date_hint);
+                        dialog.setTargetFragment(RewardsListFragment.this, REQUEST_START_DATE);
+                        dialog.show(fm, DIALOG_DATE);
                     }
                 });
                 endDate.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        FragmentManager fm = getActivity().getSupportFragmentManager();
+                        DatePickerFragment dialog;
+                        dialog = DatePickerFragment.newInstance(getDateFromView(endDate), R.string.end_date_hint);
+                        dialog.setTargetFragment(RewardsListFragment.this, REQUEST_END_DATE);
+                        dialog.show(fm, DIALOG_DATE);
                     }
                 });
                 builder.setView(mView);
                 final AlertDialog dialog = builder.create();
                 dialog.show();
-                final Reward mReward = new Reward();
                 newReward.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (!newdescription.getText().toString().trim().isEmpty()&& !newName.getText().toString().trim().isEmpty()&& !newDirections.getText().toString().trim().isEmpty()){
+                        if (mReward.getStartDate().before(mReward.getEndDate())&&!newdescription.getText().toString().trim().isEmpty()&& !endDate.getText().equals(getText(R.string.end_date))&&!startDate.getText().equals(getString(R.string.start_date))&&!newName.getText().toString().trim().isEmpty()&& !newDirections.getText().toString().trim().isEmpty()){
                             mReward.setRewardName(newName.getText().toString().trim());
                             mReward.setDescription(newdescription.getText().toString().trim());
                             mReward.setDirection(newDirections.getText().toString().trim());
                             mReward.setShared(true);
-                            mReward.setStartDate((Date)startDate.getText());
                             Backendless.Persistence.of(Reward.class).save(mReward, new AsyncCallback<Reward>() {
                                 @Override
                                 public void handleResponse(Reward response) {
@@ -127,7 +143,7 @@ public class RewardsListFragment extends ListFragment {
                             dialog.dismiss();
                         }
                         else{
-                            Toast.makeText(getContext(), "Please enter a name for the reward", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Please make sure all fields are filled and the end date is before the start date", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -142,6 +158,8 @@ public class RewardsListFragment extends ListFragment {
         Log.d(TAG, r.toString() + " was clicked." + RewardsListFragment.class);
         Intent i = new Intent(getActivity(), RewardActivity.class);
         i.putExtra("rewardName", r.getRewardName());
+        i.putExtra("endDate", r.getEndDate());
+        i.putExtra("startDate", r.getStartDate());
         i.putExtra("directions", r.getDirection());
         i.putExtra("description", r.getDescription());
         i.putExtra("objectId", r.getObjectId());
@@ -190,8 +208,11 @@ public class RewardsListFragment extends ListFragment {
         final BackendlessUser currentUser = Backendless.UserService.CurrentUser();
         final User mUser = new User();
         mUser.setRewardsUsed((String)currentUser.getProperty("rewardsUsed"));
-        // todo: Activity 3.1.4
+        mUser.setBirthday((Date)currentUser.getProperty("birthday"));
         DataQueryBuilder dq = DataQueryBuilder.create();
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
+       final  Date date = new Date();
+
         dq.setPageSize(40);
         dq.setWhereClause("shared = true");
         dq.setSortBy("created");
@@ -201,7 +222,10 @@ public class RewardsListFragment extends ListFragment {
                 Log.i(TAG, "refresh success");
                 mRewards.clear();
                 for (int i = 0; i < response.size(); i++) {
-                    if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())){
+                    if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getStartDate().before(date)&&response.get(i).getEndDate().after(date)){
+                        mRewards.add(response.get(i));
+                    }
+                    else if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getRewardName().equals("Birthday")&&dateFormat.format(mUser.getBirthday()).contains(dateFormat.format(date))){
                         mRewards.add(response.get(i));
                     }
                 }
@@ -213,6 +237,27 @@ public class RewardsListFragment extends ListFragment {
                 Log.i(TAG, "refresh failed" + fault.getMessage());
             }
         });
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_START_DATE) {
+            final Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+            updateDateView(startDate, date);
+            mReward.setStartDate(date);
+        } else if (requestCode == REQUEST_END_DATE) {
+            final Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+            updateDateView(endDate, date);
+            mReward.setEndDate(date);
+
+        }
+
+    }
+    private void updateDateView(Button dateButton, Date date) {
+        dateButton.setText(DateFormat.format(DATE_FORMAT, date));
     }
     private class RewardAdapter extends ArrayAdapter<Reward> {
 
@@ -240,6 +285,23 @@ public class RewardsListFragment extends ListFragment {
             return convertView;
 
         }
+    }
+    private Date getDateFromView(Button dateButton) {
+
+        String dateString;
+        Date date;
+
+        dateString = dateButton.getText().toString();
+        SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT, Locale.US);
+
+        try {
+            date = df.parse(dateString);
+        }
+        catch (Exception e) {
+            date = new Date();
+            Log.d(TAG, "Exception: " + e);
+        }
+        return(date);
     }
     @Override
     public void onResume() {

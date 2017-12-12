@@ -180,7 +180,7 @@ public class LoginActivity extends AppCompatActivity {
             user.setProperty("lastName", lastName);
             user.setProperty("birthday", date1);
             user.setProperty("admin", false);
-            user.setProperty("rewardsUsed", "");
+            user.setProperty("rewardsUsed", " ");
 
             Backendless.UserService.register(user, new AsyncCallback<BackendlessUser>() {
                 @Override
