@@ -13,6 +13,7 @@ public class User {
     private String rewardsUsed;
     private Boolean admin;
     private String email;
+    private String birthdayYear;
 
     public User(){
         firstName = "";
@@ -75,5 +76,13 @@ public class User {
 
     public void setRewardsUsed(String rewardsUsed) {
         this.rewardsUsed = rewardsUsed;
+    }
+
+    public String getBirthdayYear() {
+        return birthdayYear;
+    }
+
+    public void setBirthdayYear(String birthdayYear) {
+        this.birthdayYear = birthdayYear;
     }
 }

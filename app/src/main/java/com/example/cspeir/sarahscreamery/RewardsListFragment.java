@@ -209,9 +209,13 @@ public class RewardsListFragment extends ListFragment {
         final User mUser = new User();
         mUser.setRewardsUsed((String)currentUser.getProperty("rewardsUsed"));
         mUser.setBirthday((Date)currentUser.getProperty("birthday"));
+        mUser.setBirthdayYear((String)currentUser.getProperty("birhtdayYear"));
         DataQueryBuilder dq = DataQueryBuilder.create();
         final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
-       final  Date date = new Date();
+        final SimpleDateFormat yearFormat = new SimpleDateFormat("yy");
+        final  Date date = new Date();
+        final Date yearDate = new Date();
+
 
         dq.setPageSize(40);
         dq.setWhereClause("shared = true");
@@ -225,7 +229,7 @@ public class RewardsListFragment extends ListFragment {
                     if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getStartDate().before(date)&&response.get(i).getEndDate().after(date)){
                         mRewards.add(response.get(i));
                     }
-                    else if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getRewardName().equals("Birthday")&&dateFormat.format(mUser.getBirthday()).contains(dateFormat.format(date))){
+                    else if(!mUser.getBirthdayYear().contains(yearFormat.format(yearDate))&&!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getRewardName().equals("Birthday")&&dateFormat.format(mUser.getBirthday()).contains(dateFormat.format(date))){
                         mRewards.add(response.get(i));
                     }
                 }

@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -115,7 +116,15 @@ public class RewardFragment extends Fragment {
                         } else {
                             try {
                                 BackendlessUser currentUser = Backendless.UserService.CurrentUser();
-                                currentUser.setProperty("rewardsUsed",currentUser.getProperty("rewardsUsed")+" "+ mReward.getObjectId());
+                                if (!mReward.getRewardName().contains("Birthday")){
+                                    currentUser.setProperty("rewardsUsed",currentUser.getProperty("rewardsUsed")+" "+ mReward.getObjectId());
+                                }
+                                else {
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy");
+                                    Date date = new Date();
+                                    currentUser.setProperty("birthdayYear", currentUser.getProperty("birthdayYear")+""+dateFormat.format(date));
+                                }
+
                                 Backendless.UserService.update(currentUser, new AsyncCallback<BackendlessUser>() {
                                     @Override
                                     public void handleResponse(BackendlessUser response) {
