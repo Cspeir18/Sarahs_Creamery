@@ -13,14 +13,14 @@
         android:textSize="30dp"
         android:textStyle="bold"
         android:text="@string/rewards_title"
-        android:id="@+id/flavor_title"
+        android:id="@+id/rewards_title"
         android:gravity="center"/>
     <ListView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/flavor_title"/>
+        android:layout_below="@+id/rewards_title"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/floating_action_button"

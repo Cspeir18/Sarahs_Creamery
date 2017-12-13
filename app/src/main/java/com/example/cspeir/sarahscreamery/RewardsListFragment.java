@@ -47,6 +47,7 @@ public class RewardsListFragment extends ListFragment {
     private static final int REQUEST_END_DATE = 2;
     public static final String DATE_FORMAT = "E MM-dd-yyyy";
     Button newReward, startDate, endDate;
+    TextView title;
     EditText newName, newdescription, newDirections;
     private Reward mReward;
     private static final String TAG = "RewardsListFragment";
@@ -97,6 +98,7 @@ public class RewardsListFragment extends ListFragment {
                 newDirections = (EditText) mView.findViewById(R.id.new_reward_directions_et);
                 startDate = (Button) mView.findViewById(R.id.start_date);
                 endDate = (Button) mView.findViewById(R.id.end_date);
+                title = (TextView) mView.findViewById(R.id.rewards_title);
                 startDate.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -209,10 +211,10 @@ public class RewardsListFragment extends ListFragment {
         final User mUser = new User();
         mUser.setRewardsUsed((String)currentUser.getProperty("rewardsUsed"));
         mUser.setBirthday((Date)currentUser.getProperty("birthday"));
-        mUser.setBirthdayYear((String)currentUser.getProperty("birhtdayYear"));
+        mUser.setBirthdayYear((String)currentUser.getProperty("birthdayYear"));
         DataQueryBuilder dq = DataQueryBuilder.create();
         final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
-        final SimpleDateFormat yearFormat = new SimpleDateFormat("yy");
+        final SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
         final  Date date = new Date();
         final Date yearDate = new Date();
 
@@ -234,6 +236,7 @@ public class RewardsListFragment extends ListFragment {
                     }
                 }
                 ((RewardAdapter) getListAdapter()).notifyDataSetChanged();
+                
             }
 
             @Override

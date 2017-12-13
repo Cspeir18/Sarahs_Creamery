@@ -120,9 +120,9 @@ public class RewardFragment extends Fragment {
                                     currentUser.setProperty("rewardsUsed",currentUser.getProperty("rewardsUsed")+" "+ mReward.getObjectId());
                                 }
                                 else {
-                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yy");
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
                                     Date date = new Date();
-                                    currentUser.setProperty("birthdayYear", currentUser.getProperty("birthdayYear")+""+dateFormat.format(date));
+                                    currentUser.setProperty("birthdayYear", currentUser.getProperty("birthdayYear")+" "+dateFormat.format(date));
                                 }
 
                                 Backendless.UserService.update(currentUser, new AsyncCallback<BackendlessUser>() {

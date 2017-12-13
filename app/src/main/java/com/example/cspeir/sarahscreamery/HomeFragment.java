@@ -16,6 +16,7 @@ import com.backendless.BackendlessUser;
 
 public class HomeFragment extends Fragment {
     TextView helloText;
+    TextView saraText;
 
     public HomeFragment(){
 
@@ -25,6 +26,8 @@ public class HomeFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_home, v, false);
         helloText= (TextView) rootView.findViewById(R.id.hello);
         helloText.setText("Hello "+getUserName()+ "!");
+
+
         return rootView;
 
 
