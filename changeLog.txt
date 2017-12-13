@@ -14,3 +14,8 @@
     progress bar for timer
     alert dialog warning 
     fixed deleting reward bug
+    
+12/13/17 v 0.1.2
+    logic for rewards
+    logic for birthday reward
+    updated UI
