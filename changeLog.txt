@@ -19,3 +19,8 @@
     logic for rewards
     logic for birthday reward
     updated UI
+12/15/17 v0.2.1
+    integrated aws cognito
+    login
+    register
+    confirm code
