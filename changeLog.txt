@@ -14,3 +14,13 @@
     progress bar for timer
     alert dialog warning 
     fixed deleting reward bug
+    
+12/13/17 v 0.1.2
+    logic for rewards
+    logic for birthday reward
+    updated UI
+12/15/17 v0.2.1
+    integrated aws cognito
+    login
+    register
+    confirm code

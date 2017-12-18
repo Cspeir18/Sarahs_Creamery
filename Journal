@@ -3,3 +3,13 @@ after clicking on a list item. To figure this out i looked at how i did it in Tr
 My next task was to add a Qr code that stored information. This was my most difficult task of the week. I looked up a few
 ways to do this, the first few i found didn't work. However, it finally worked and it stored my data correctly. I needed a way 
 for the Qr code to expire. So i decided to use a progress bar that ticks for a minute before the Qr code dissapears. 
+
+
+
+12/15/17
+
+This week i added the logic for when rewards show up and disapear, i also started transfering my data storage to aws.
+I had trouble with Cognito because it was hard to sign my user in but i kept lookin online and found the way to do it.
+I started with DynamoDb but am having some trouble with it, monday i will ask mr linburg for help and will hopefully get more 
+progress done because after i figure that out it should be smooth sailing from there.
+
