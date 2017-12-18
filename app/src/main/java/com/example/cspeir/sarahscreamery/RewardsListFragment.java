@@ -236,7 +236,7 @@ public class RewardsListFragment extends ListFragment {
                     }
                 }
                 ((RewardAdapter) getListAdapter()).notifyDataSetChanged();
-                
+
             }
 
             @Override

@@ -16,6 +16,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
@@ -29,11 +31,17 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
     TextView name;
+    public String username;
     private final String TAG =MainActivity.class.getSimpleName();
     Fragment contentFragment = null;
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        String poolId = "us-east-1_PYpkY6FGt";
+        String clientId = "6fmio3n5p56a7lnmdefbf6ngt4";
+        String clientSecret = "1jehuu276sg9d5qou9bie2uge5hc6jbeo6h4iujdm69qb4h9k4k9";
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        final CognitoUserPool userPool = new CognitoUserPool(getBaseContext(), poolId, clientId, clientSecret, clientConfiguration);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -41,18 +49,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-        BackendlessUser bUser = Backendless.UserService.CurrentUser();
-        User mUser = new User();
-        mUser.setFirstName(bUser.getProperty("firstName").toString());
-        mUser.setLastName(bUser.getProperty("lastName").toString());
-        mUser.setBirthday((Date)bUser.getProperty("birthday"));
-        mUser.setEmail(bUser.getEmail());
-        mUser.setAdmin((Boolean)bUser.getProperty("admin"));
+        //BackendlessUser bUser = Backendless.UserService.CurrentUser();
+        //User mUser = new User();
+        //mUser.setFirstName(bUser.getProperty("firstName").toString());
+        //mUser.setLastName(bUser.getProperty("lastName").toString());
+        //mUser.setBirthday((Date)bUser.getProperty("birthday"));
+        //mUser.setEmail(bUser.getEmail());
+        //mUser.setAdmin((Boolean)bUser.getProperty("admin"));
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View header = navigationView.getHeaderView(0);
-        name = (TextView)header.findViewById(R.id.fullName);
-        name.setText(mUser.getFirstName()+" "+mUser.getLastName());
+        //name = (TextView)header.findViewById(R.id.fullName);
+        //name.setText(mUser.getFirstName()+" "+mUser.getLastName());
         contentFragment = new HomeFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.content_frame, contentFragment);

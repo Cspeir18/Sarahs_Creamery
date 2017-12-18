@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +25,7 @@ public class StartActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+
         logo = (ImageView) findViewById(R.id.logo);
         logo.setImageResource(R.drawable.startup_pic);
         new Handler().postDelayed(new Runnable() {
