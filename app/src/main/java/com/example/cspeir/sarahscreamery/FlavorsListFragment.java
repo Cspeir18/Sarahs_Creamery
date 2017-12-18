@@ -215,7 +215,7 @@ public class FlavorsListFragment extends ListFragment {
                     catch (Exception e){
                         e.printStackTrace();
                     }
-
+ 
                 }
             });
             deleteTread.start();
