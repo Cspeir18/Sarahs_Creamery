@@ -24,3 +24,7 @@
     login
     register
     confirm code
+ 12/20/17 v 0.3.1
+    retrieve and edit flavors
+    set up tables for rewards
+    security on aws account
