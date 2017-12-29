@@ -110,12 +110,19 @@
             android:calendarTextColor="@color/colorPrimary"
             android:calendarViewShown="false">
         </DatePicker>
-
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorBlue"
+            android:text="@string/verify_account"
+            android:id="@+id/verify_account_text"
+            android:gravity="center"
+            android:textSize="15dp"/>
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btn_login"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="24dp"
             android:background="@color/colorPrimary"
             android:textColor="@color/colorAccent"
@@ -132,6 +139,15 @@
                   android:textSize="16dp"
             />
         <requestFocus/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorBlue"
+            android:text="@string/forgot_password_text"
+            android:textSize="15dp"
+            android:id="@+id/forgot_password_text"
+            android:gravity="center"
+            />
 
 
     </LinearLayout>

@@ -75,4 +75,8 @@
     <string name="code_confirm_hint">Enter Confirmation Code</string>
     <string name="code_confirm">Enter Code:</string>
     <string name="submit">Submit</string>
+    <string name="forgot_password_text">Forgot Password?</string>
+    <string name="verify_account">Verify account</string>
+    <string name="about_app">About</string>
+
 </resources>

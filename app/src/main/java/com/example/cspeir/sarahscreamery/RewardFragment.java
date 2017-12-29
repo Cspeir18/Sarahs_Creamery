@@ -7,11 +7,14 @@ import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.AnimationDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateFormat;
@@ -26,6 +29,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserAttributes;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserDetails;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GetDetailsHandler;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
@@ -39,9 +50,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * Created by cspeir on 12/6/2017.
@@ -52,9 +65,14 @@ public class RewardFragment extends Fragment {
     private static final String IMAGE_DIRECTORY = "/QRcodeDemonuts";
     Bitmap bitmap ;
     private ImageView iv;
+    private String username;
+    private AWSCredentials credentials;
+    private AWSCredentialsProvider mCredentialsProvider;
+    private CognitoUser user;
     private Button btn;
+    private User mUser;
     TextView start, end, startHint, endHint;
-    private Reward mReward;
+    private Rewards mReward;
     public RewardFragment() {
 
     }
@@ -62,24 +80,53 @@ public class RewardFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceSate) {
         super.onCreate(savedInstanceSate);
+        credentials = new AWSCredentials() {
+            @Override
+            public String getAWSAccessKeyId() {
+                return getResources().getString(R.string.access_key_ID);
+            }
+
+            @Override
+            public String getAWSSecretKey() {
+                return getResources().getString(R.string.secret_access_key);
+            }
+        };
+
+        mCredentialsProvider = new AWSCredentialsProvider() {
+            @Override
+            public AWSCredentials getCredentials() {
+                return credentials;
+            }
+
+            @Override
+            public void refresh() {
+
+            }
+        };
         setHasOptionsMenu(true);
-        String rewardName, description, directions, objectId;
+        String rewardName, description, directions, birthday;
         Date endDate, startDate;
         Intent intent = getActivity().getIntent();
-        objectId = intent.getStringExtra("objectId");
+        birthday = intent.getStringExtra("birthday");
+        Log.i("RewardFragment", birthday);
         rewardName = intent.getStringExtra("rewardName");
         description = intent.getStringExtra("description");
         directions = intent.getStringExtra("directions");
         endDate = (Date)intent.getSerializableExtra("endDate");
         startDate = (Date)intent.getSerializableExtra("startDate");
-        mReward = new Reward();
+        mReward = new Rewards();
         mReward.setDirection(directions);
         mReward.setDescription(description);
         mReward.setRewardName(rewardName);
-        mReward.setObjectId(objectId);
-        mReward.setShared(true);
-        mReward.setStartDate(startDate);
-        mReward.setEndDate(endDate);
+        mReward.setFormattedStartDate(startDate);
+        mReward.setFormattedEndDate(endDate);
+        final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+        try {
+            mUser = new User();
+            mUser.setBirthday(format.parse(birthday));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -113,29 +160,61 @@ public class RewardFragment extends Fragment {
                     public void onClick(View v) {
                         if (mReward.getDirection().length() == 0) {
                             Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
-                        } else {
+                        }
+                        else {
                             try {
-                                BackendlessUser currentUser = Backendless.UserService.CurrentUser();
-                                if (!mReward.getRewardName().contains("Birthday")){
-                                    currentUser.setProperty("rewardsUsed",currentUser.getProperty("rewardsUsed")+" "+ mReward.getObjectId());
-                                }
-                                else {
-                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
-                                    Date date = new Date();
-                                    currentUser.setProperty("birthdayYear", currentUser.getProperty("birthdayYear")+" "+dateFormat.format(date));
-                                }
-
-                                Backendless.UserService.update(currentUser, new AsyncCallback<BackendlessUser>() {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                                View mView = getActivity().getLayoutInflater().inflate(R.layout.animation_loading, null);
+                                builder.setView(mView);
+                                ImageView animation = (ImageView) mView.findViewById(R.id.animation);
+                                final AnimationDrawable animationDrawable1 = (AnimationDrawable)animation.getBackground();
+                                animationDrawable1.start();
+                                final AlertDialog loadingDialog= builder.create();
+                                loadingDialog.show();
+                                Thread thread = new Thread(new Runnable() {
                                     @Override
-                                    public void handleResponse(BackendlessUser response) {
+                                    public void run() {
+                                        Intent intent = getActivity().getIntent();
+                                        username=intent.getStringExtra("name");
+                                        user = AppHelper.getPool().getUser(username);
+                                        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
+                                        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+                                        Rewards reward =mapper.load(Rewards.class, mReward.getRewardName());
+                                        if (!reward.getRewardName().contains("Birthday")){
+                                            reward.setUsedBy(reward.getUsedBy()+" "+username);
+                                            mapper.save(reward);
+                                        }
+                                        else {
+                                            final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
+                                            final SimpleDateFormat monthFormat = new SimpleDateFormat("MM");
+                                            final SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
+                                            final Date date = new Date();
+                                            final Date yearDate = new Date();
 
-                                    }
-
-                                    @Override
-                                    public void handleFault(BackendlessFault fault) {
-
+                                            String year;
+                                            if (Integer.parseInt(monthFormat.format(date))==1&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==12){
+                                                yearDate.setYear(yearDate.getYear()-1);
+                                                year= yearFormat.format(yearDate);
+                                            }
+                                            else if(Integer.parseInt(monthFormat.format(date))==12&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==1){
+                                                yearDate.setYear(yearDate.getYear()+1);
+                                                year = yearFormat.format(yearDate);
+                                            }
+                                            else{
+                                                year = yearFormat.format(yearDate);
+                                            }
+                                            reward.setUsedBy(reward.getUsedBy()+" "+username+year);
+                                            mapper.save(reward);
+                                        }
                                     }
                                 });
+                                thread.start();
+                                try {
+                                    thread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                loadingDialog.dismiss();
                                 bitmap = TextToImageEncode(mReward.getDirection());
                                 iv.setImageBitmap(bitmap);
                                 String path = saveImage(bitmap);
@@ -192,8 +271,17 @@ public class RewardFragment extends Fragment {
 
         rewardNameText.setText(mReward.getRewardName());
         rewarddescriptionText.setText(mReward.getDescription());
-        end.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getEndDate()));
-        start.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getStartDate()));
+
+        if (mReward.getRewardName().contains("Birthday")){
+            SimpleDateFormat format = new SimpleDateFormat("MM/dd");
+            end.setText(format.format(mReward.getFormattedEndDate()));
+            start.setText(format.format(mReward.getFormattedStartDate()));
+        }
+        else{
+            end.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getFormattedEndDate()));
+            start.setText(DateFormat.format(RewardsListFragment.DATE_FORMAT, mReward.getFormattedStartDate()));
+        }
+
         return v;
     }
     public String saveImage(Bitmap myBitmap) {

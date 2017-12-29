@@ -2,8 +2,10 @@ package com.example.cspeir.sarahscreamery;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -20,10 +22,20 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserDetails;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GetDetailsHandler;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedList;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
@@ -31,9 +43,12 @@ import com.backendless.exceptions.BackendlessException;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,27 +63,59 @@ public class RewardsListFragment extends ListFragment {
     public static final String DATE_FORMAT = "E MM-dd-yyyy";
     Button newReward, startDate, endDate;
     TextView title;
+    private AWSCredentials credentials;
+    private String username;
+    private String birthday;
+    private String profile;
+    private CognitoUser user;
+    private AWSCredentialsProvider mCredentialsProvider;
     EditText newName, newdescription, newDirections;
-    private Reward mReward;
+    private Rewards mReward;
     private static final String TAG = "RewardsListFragment";
-    private ArrayList<Reward> mRewards;
+    private ArrayList<Rewards> mRewards;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+        StrictMode.setThreadPolicy(policy);
 
 
         //get the value of mPublicView from the intent. By default, it will be set to false (the second parameter in the call below)
 
-        mReward = new Reward();
+        mReward = new Rewards();
         //Create the list of trips
-        mRewards = new ArrayList<Reward>();
-        refreshRewardList();
+        mRewards = new ArrayList<Rewards>();
+
+        credentials = new AWSCredentials() {
+            @Override
+            public String getAWSAccessKeyId() {
+                return getResources().getString(R.string.access_key_ID);
+            }
+
+            @Override
+            public String getAWSSecretKey() {
+                return getResources().getString(R.string.secret_access_key);
+            }
+        };
+
+        mCredentialsProvider = new AWSCredentialsProvider() {
+            @Override
+            public AWSCredentials getCredentials() {
+                return credentials;
+            }
+
+            @Override
+            public void refresh() {
+
+            }
+        };
 
         //Create the Adapter that will control the ListView for the fragment
         //The adapter is responsible for feeding the data to the list view
         RewardsListFragment.RewardAdapter adapter = new RewardsListFragment.RewardAdapter(mRewards);
         setListAdapter(adapter);
-
+        refreshRewardList();
     }
     public RewardsListFragment(){
 
@@ -81,12 +128,32 @@ public class RewardsListFragment extends ListFragment {
 
         //register the context menu
         ListView listView = (ListView)rootView.findViewById(android.R.id.list);
-
         registerForContextMenu(listView);
-        FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.floating_action_button);
-        if (currentUser.getProperty("admin").equals(false)){
-            fab.setVisibility(View.GONE);
-        }
+        Intent intent = getActivity().getIntent();
+        username=intent.getStringExtra("name");
+        user = AppHelper.getPool().getUser(username);
+        final FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.floating_action_button);
+        GetDetailsHandler detailsHandler = new GetDetailsHandler() {
+            @Override
+            public void onSuccess(CognitoUserDetails cognitoUserDetails) {
+
+                // Store details in the AppHandler
+                AppHelper.setUserDetails(cognitoUserDetails);
+                profile = cognitoUserDetails.getAttributes().getAttributes().get("profile");
+
+                if (profile.contains("true")){
+                    fab.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+
+                Toast.makeText(getContext(), "Could not fetch user details! "+exception.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
+        user.getDetailsInBackground(detailsHandler);
+        registerForContextMenu(listView);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,27 +192,34 @@ public class RewardsListFragment extends ListFragment {
                 newReward.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (mReward.getStartDate().before(mReward.getEndDate())&&!newdescription.getText().toString().trim().isEmpty()&& !endDate.getText().equals(getText(R.string.end_date))&&!startDate.getText().equals(getString(R.string.start_date))&&!newName.getText().toString().trim().isEmpty()&& !newDirections.getText().toString().trim().isEmpty()){
-                            mReward.setRewardName(newName.getText().toString().trim());
-                            mReward.setDescription(newdescription.getText().toString().trim());
-                            mReward.setDirection(newDirections.getText().toString().trim());
-                            mReward.setShared(true);
-                            Backendless.Persistence.of(Reward.class).save(mReward, new AsyncCallback<Reward>() {
-                                @Override
-                                public void handleResponse(Reward response) {
-                                    Toast.makeText(getContext(), "New reward added", Toast.LENGTH_SHORT).show();
-                                    refreshRewardList();
-                                }
+                        if (mReward.getFormattedEndDate()!=null&&mReward.getFormattedStartDate()!=null) {
 
-                                @Override
-                                public void handleFault(BackendlessFault fault) {
-                                    Toast.makeText(getContext(), "Failed to add reward: "+ fault.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            dialog.dismiss();
+
+                            if (mReward.getFormattedStartDate().before(mReward.getFormattedEndDate()) && !newdescription.getText().toString().trim().isEmpty() && !endDate.getText().equals(getText(R.string.end_date)) && !startDate.getText().equals(getString(R.string.start_date)) && !newName.getText().toString().trim().isEmpty() && !newDirections.getText().toString().trim().isEmpty()) {
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
+                                        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+                                        SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+                                        Rewards reward = new Rewards();
+                                        reward.setDescription(newdescription.getText().toString().trim());
+                                        reward.setDirection(newDirections.getText().toString().trim());
+                                        reward.setStartDate(format.format(mReward.getFormattedStartDate()));
+                                        reward.setEndDate(format.format(mReward.getFormattedEndDate()));
+                                        reward.setRewardName(newName.getText().toString().trim());
+                                        reward.setUsedBy(" ");
+                                        mapper.save(reward);
+                                    }
+                                });
+                                thread.start();
+                                dialog.dismiss();
+                            } else {
+                                Toast.makeText(getContext(), "Please make sure all fields are filled and the start date is before the end date", Toast.LENGTH_SHORT).show();
+                            }
                         }
                         else{
-                            Toast.makeText(getContext(), "Please make sure all fields are filled and the end date is before the start date", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Please enter a start and end date", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -155,22 +229,45 @@ public class RewardsListFragment extends ListFragment {
         return rootView;
     }
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        Reward r= (Reward) ((RewardAdapter)getListAdapter()).getItem(position);
-        Log.d(TAG, r.toString() + " was clicked." + RewardsListFragment.class);
-        Intent i = new Intent(getActivity(), RewardActivity.class);
-        i.putExtra("rewardName", r.getRewardName());
-        i.putExtra("endDate", r.getEndDate());
-        i.putExtra("startDate", r.getStartDate());
-        i.putExtra("directions", r.getDirection());
-        i.putExtra("description", r.getDescription());
-        i.putExtra("objectId", r.getObjectId());
-        startActivity(i);
+    public void onListItemClick(ListView l, View v, final int position, long id) {
+        Intent intent = getActivity().getIntent();
+        username=intent.getStringExtra("name");
+        user = AppHelper.getPool().getUser(username);
+        GetDetailsHandler detailsHandler = new GetDetailsHandler() {
+            @Override
+            public void onSuccess(CognitoUserDetails cognitoUserDetails) {
+                // Store details in the AppHandler
+                AppHelper.setUserDetails(cognitoUserDetails);
+                profile = cognitoUserDetails.getAttributes().getAttributes().get("profile");
+                birthday = cognitoUserDetails.getAttributes().getAttributes().get("birthdate");
+                Rewards r= (Rewards) ((RewardAdapter)getListAdapter()).getItem(position);
+                Log.d(TAG, r.toString() + " was clicked." + RewardsListFragment.class);
+                Intent i = new Intent(getActivity(), RewardActivity.class);
+                i.putExtra("rewardName", r.getRewardName());
+                i.putExtra("endDate", r.getFormattedEndDate());
+                i.putExtra("startDate", r.getFormattedStartDate());
+                i.putExtra("directions", r.getDirection());
+                i.putExtra("description", r.getDescription());
+                i.putExtra("name", username);
+                if (birthday.length()>2){
+                    i.putExtra("birthday", birthday);
+                    startActivity(i);
+                }
+
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+
+                Toast.makeText(getContext(), "Could not fetch user details! "+exception.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
+        user.getDetailsInBackground(detailsHandler);
+
     }
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        BackendlessUser currentUser = Backendless.UserService.CurrentUser();
-        if (currentUser.getProperty("admin").equals(true)) {
+        if (profile.contains("true")) {
             getActivity().getMenuInflater().inflate(R.menu.menu_reward_list_item_context, menu);
         }
     }
@@ -179,7 +276,7 @@ public class RewardsListFragment extends ListFragment {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
         int position = info.position;
         RewardsListFragment.RewardAdapter adapter = (RewardsListFragment.RewardAdapter)getListAdapter();
-        Reward reward = adapter.getItem(position);
+        Rewards reward = adapter.getItem(position);
 
         switch (item.getItemId()) {
             case R.id.menu_item_delete_trip:
@@ -189,17 +286,22 @@ public class RewardsListFragment extends ListFragment {
         }
         return super.onContextItemSelected(item);
     }
-    private void deleteReward(Reward reward) {
-        final Reward deleteReward = reward;
+    private void deleteReward(Rewards reward) {
+        final Rewards deleteReward = reward;
 
 
         Thread deleteTread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Backendless.Data.of(Reward.class).remove(deleteReward);
-                Looper.prepare();
-                Toast.makeText(getContext(), "Reward removed", Toast.LENGTH_SHORT).show();
-                refreshRewardList();
+                try{
+                    AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
+                    DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+                    mapper.delete(deleteReward);
+                    refreshRewardList();
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         });
         deleteTread.start();
@@ -207,43 +309,128 @@ public class RewardsListFragment extends ListFragment {
 
     }
     private void refreshRewardList() {
-        final BackendlessUser currentUser = Backendless.UserService.CurrentUser();
         final User mUser = new User();
-        mUser.setRewardsUsed((String)currentUser.getProperty("rewardsUsed"));
-        mUser.setBirthday((Date)currentUser.getProperty("birthday"));
-        mUser.setBirthdayYear((String)currentUser.getProperty("birthdayYear"));
-        DataQueryBuilder dq = DataQueryBuilder.create();
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
-        final SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
-        final  Date date = new Date();
-        final Date yearDate = new Date();
-
-
-        dq.setPageSize(40);
-        dq.setWhereClause("shared = true");
-        dq.setSortBy("created");
-        Backendless.Persistence.of(Reward.class).find(dq, new AsyncCallback<List<Reward>>() {
+        GetDetailsHandler detailsHandler = new GetDetailsHandler() {
             @Override
-            public void handleResponse(List<Reward> response) {
-                Log.i(TAG, "refresh success");
-                mRewards.clear();
-                for (int i = 0; i < response.size(); i++) {
-                    if(!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getStartDate().before(date)&&response.get(i).getEndDate().after(date)){
-                        mRewards.add(response.get(i));
+            public void onSuccess(final CognitoUserDetails cognitoUserDetails) {
+                final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+                // Store details in the AppHandler
+
+                AppHelper.setUserDetails(cognitoUserDetails);
+                String birthday = cognitoUserDetails.getAttributes().getAttributes().get("birthdate");
+                String rewardsUsed = cognitoUserDetails.getAttributes().getAttributes().get("custom:rewardsUsed");
+                String birthdayYear = cognitoUserDetails.getAttributes().getAttributes().get("custom:birthdayYearUsed");
+                mUser.setRewardsUsed(rewardsUsed);
+                try {
+                    mUser.setBirthday(format.parse(birthday));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                mUser.setBirthdayYear(birthdayYear);
+                final Thread refreshThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
+                        DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
+                        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+                        PaginatedList<Rewards> result = mapper.scan(Rewards.class, scanExpression);
+                        mRewards.clear();
+                        for (int i = 0; i < result.size(); i++) {
+                            Rewards newReward = new Rewards();
+                            newReward.setUsedBy(result.get(i).getUsedBy());
+                            newReward.setRewardName(result.get(i).getRewardName());
+                            newReward.setDescription(result.get(i).getDescription());
+                            newReward.setDirection(result.get(i).getDirection());
+                            try {
+                                newReward.setFormattedEndDate(format.parse(result.get(i).getEndDate()));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                newReward.setFormattedStartDate(format.parse(result.get(i).getStartDate()));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
+                            final SimpleDateFormat monthFormat = new SimpleDateFormat("MM");
+                            final SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
+                            final Date date = new Date();
+                            final Date yearDate = new Date();
+                            GregorianCalendar cal = new GregorianCalendar();
+                            GregorianCalendar calendar = new GregorianCalendar();
+                            calendar.setTime(mUser.getBirthday());
+                            cal.setTime(mUser.getBirthday());
+                            cal.add(Calendar.DATE, 4);
+                            Date compareBday = date;
+                            compareBday.setYear(mUser.getBirthday().getYear());
+                            String year;
+                            if (Integer.parseInt(monthFormat.format(date))==1&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==12){
+                                yearDate.setYear(yearDate.getYear()-1);
+                                 year= yearFormat.format(yearDate);
+
+                            }
+                            else if(Integer.parseInt(monthFormat.format(date))==12&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==1){
+                                yearDate.setYear(yearDate.getYear()+1);
+                                year = yearFormat.format(yearDate);
+                                compareBday.setYear(mUser.getBirthday().getYear()-1);
+                            }
+                            else{
+                                year = yearFormat.format(yearDate);
+                            }
+                            Date afterBday = cal.getTime();
+                            GregorianCalendar cal2 = new GregorianCalendar();
+                            GregorianCalendar calender2 = new GregorianCalendar();
+                            calender2.setTime(mUser.getBirthday());
+                            cal2.setTime(mUser.getBirthday());
+                            cal2.add(Calendar.DATE, -4);
+
+                            Date beforeBday = cal2.getTime();
+                            String birthday = dateFormat.format(mUser.getBirthday());
+                            String todaysDate = dateFormat.format(date);
+                            if (!cognitoUserDetails.getAttributes().getAttributes().get("profile").contains("true")) {
+
+                                if (!newReward.getUsedBy().contains(username) && (newReward.getFormattedStartDate().before(date)||format.format(newReward.getFormattedStartDate()).contains(format.format(date))) && (newReward.getFormattedEndDate().after(date)||format.format(newReward.getFormattedEndDate()).contains(format.format(date)))) {
+                                    mRewards.add(newReward);
+                                } else if (!newReward.getUsedBy().contains(username + year) && newReward.getRewardName().contains("Birthday") && beforeBday.before(compareBday)&& afterBday.after(compareBday)) {
+
+                                    newReward.setFormattedEndDate(afterBday);
+                                    newReward.setFormattedStartDate(beforeBday);
+                                    mRewards.add(newReward);
+                                }
+                            }
+                            else{
+                                mRewards.add(newReward);
+                            }
+
+                        }
+                        Log.i(TAG, Integer.toString(mRewards.size()));
+
                     }
-                    else if(!mUser.getBirthdayYear().contains(yearFormat.format(yearDate))&&!mUser.getRewardsUsed().contains(response.get(i).getObjectId())&&response.get(i).getRewardName().equals("Birthday")&&dateFormat.format(mUser.getBirthday()).contains(dateFormat.format(date))){
-                        mRewards.add(response.get(i));
-                    }
+                });
+
+                refreshThread.start();
+                try {
+                    refreshThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 ((RewardAdapter) getListAdapter()).notifyDataSetChanged();
 
+
+
             }
 
             @Override
-            public void handleFault(BackendlessFault fault) {
-                Log.i(TAG, "refresh failed" + fault.getMessage());
+            public void onFailure(Exception exception) {
+
+                Toast.makeText(getContext(), "Could not fetch user details! "+exception.getMessage(), Toast.LENGTH_SHORT).show();
             }
-        });
+        };
+        Intent intent = getActivity().getIntent();
+        username=intent.getStringExtra("name");
+        user = AppHelper.getPool().getUser(username);
+        user.getDetailsInBackground(detailsHandler);
+
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -254,11 +441,11 @@ public class RewardsListFragment extends ListFragment {
         if (requestCode == REQUEST_START_DATE) {
             final Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             updateDateView(startDate, date);
-            mReward.setStartDate(date);
+            mReward.setFormattedStartDate(date);
         } else if (requestCode == REQUEST_END_DATE) {
             final Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             updateDateView(endDate, date);
-            mReward.setEndDate(date);
+            mReward.setFormattedEndDate(date);
 
         }
 
@@ -266,9 +453,9 @@ public class RewardsListFragment extends ListFragment {
     private void updateDateView(Button dateButton, Date date) {
         dateButton.setText(DateFormat.format(DATE_FORMAT, date));
     }
-    private class RewardAdapter extends ArrayAdapter<Reward> {
+    private class RewardAdapter extends ArrayAdapter<Rewards> {
 
-        public RewardAdapter(ArrayList<Reward> Rewards) {
+        public RewardAdapter(ArrayList<Rewards> Rewards) {
             super(getActivity(), 0, Rewards);
         }
         @Override
@@ -282,7 +469,8 @@ public class RewardsListFragment extends ListFragment {
             if(convertView==null){
                 convertView= getActivity().getLayoutInflater().inflate(R.layout.fragment_reward_list_item,  null);
             }
-            Reward reward= getItem(position);
+            Rewards reward= getItem(position);
+            Log.i(TAG, "added item");
             TextView nameTextView = (TextView)convertView.findViewById(R.id.reward_list_item_textName);
             nameTextView.setText(reward.getRewardName());
             TextView desciptionTextView = (TextView) convertView.findViewById(R.id.reward_list_item_textDescription);

@@ -39,7 +39,10 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -107,6 +110,18 @@ public class FlavorsListFragment extends ListFragment {
         super.onCreateView(inflater, v, bundle);
         View rootView = inflater.inflate(R.layout.fragment_flavors_list, v, false);
 
+        Reward reward = new Reward();
+        reward.setStartDate(new Date());
+        Log.i("Date", "Today's date: " + reward.getStartDate().toString());
+        SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+        String temp = format.format(reward.getStartDate());
+        Log.i("Date", temp.toString());
+        try {
+            Date date = format.parse(temp);
+            Log.i("Date", date.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         //register the context menu
         ListView listView = (ListView)rootView.findViewById(android.R.id.list);
@@ -124,8 +139,8 @@ public class FlavorsListFragment extends ListFragment {
                 AppHelper.setUserDetails(cognitoUserDetails);
                 profile = cognitoUserDetails.getAttributes().getAttributes().get("profile");
 
-                if (profile.contains("false")){
-                    fab.setVisibility(View.GONE);
+                if (profile.contains("true")){
+                    fab.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -146,7 +161,7 @@ public class FlavorsListFragment extends ListFragment {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 View mView = getLayoutInflater(bundle).inflate(R.layout.new_flavor, null);
                 final EditText flavorEt = (EditText) mView.findViewById(R.id.new_flavor_et);
-                Button flavorButton = (Button) mView.findViewById(R.id.new_flavor_btn);
+                final Button flavorButton = (Button) mView.findViewById(R.id.new_flavor_btn);
                 builder.setView(mView);
                 final AlertDialog dialog = builder.create();
                 dialog.show();
@@ -160,8 +175,8 @@ public class FlavorsListFragment extends ListFragment {
                                 public void run() {
                                     AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
                                     DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-                                    Flavors flavor = new Flavors();
-                                    flavor.setName(flavorEt.getText().toString().trim());
+                                    Flavors flavor = mapper.load(Flavors.class, "Flavors");
+                                    flavor.getFlavorsList().add(flavorEt.getText().toString().trim());
                                     mapper.save(flavor);
                                 }
                             });
@@ -209,13 +224,15 @@ public class FlavorsListFragment extends ListFragment {
                     try{
                         AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
                         DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
-                        mapper.delete(deleteFlavor);
+                        Flavors flavor =mapper.load(Flavors.class, "Flavors");
+                        flavor.getFlavorsList().remove(deleteFlavor.getName());
+                        mapper.save(flavor);
                         refreshFlavorList();
                     }
                     catch (Exception e){
                         e.printStackTrace();
                     }
- 
+
                 }
             });
             deleteTread.start();
@@ -228,12 +245,13 @@ public class FlavorsListFragment extends ListFragment {
                 AmazonDynamoDBClient ddbClient = new AmazonDynamoDBClient(mCredentialsProvider);
                 DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
                 DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-                Toast.makeText(getContext(), "refreshed",Toast.LENGTH_SHORT ).show();
                 PaginatedList<Flavors> result = mapper.scan(Flavors.class, scanExpression);
                 mFlavors.clear();
-                for (int i=0;i<result.size();i++){
+                for (int i=0;i<result.get(0).getFlavorsList().size();i++){
+                    Flavors newflavor = new Flavors();
+                    newflavor.setName(result.get(0).getFlavorsList().get(i));
+                    mFlavors.add(newflavor);
 
-                    mFlavors.add(result.get(i));
                 }
 
                 ((FlavorAdapter)getListAdapter()).notifyDataSetChanged();

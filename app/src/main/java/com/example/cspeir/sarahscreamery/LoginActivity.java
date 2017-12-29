@@ -37,9 +37,11 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.Auth
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.AuthenticationDetails;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ChallengeContinuation;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ChooseMfaContinuation;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ForgotPasswordContinuation;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.MultiFactorAuthenticationContinuation;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.NewPasswordContinuation;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.AuthenticationHandler;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.ForgotPasswordHandler;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GenericHandler;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.GetDetailsHandler;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.SignUpHandler;
@@ -63,10 +65,10 @@ import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
     private final String TAG =LoginActivity.class.getSimpleName();
-    TextView birthday_text;
+    TextView birthday_text, forgot_password_text;
     EditText input_email;
     EditText input_password;
-    TextView link_signup;
+    TextView link_signup, verify_account_text;
     AppCompatButton login_button;
     private String username;
     EditText input_first_name;
@@ -79,6 +81,7 @@ public class LoginActivity extends AppCompatActivity {
     private String usernameInput;
     private AnimationDrawable animationDrawable;
     CognitoUser cognitoUser;
+    private ForgotPasswordContinuation forgotPasswordContinuation;
 
 
     private ImageView mProgressBar;
@@ -90,6 +93,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
             AppHelper.init(getApplicationContext());
+            verify_account_text = (TextView) findViewById(R.id.verify_account_text);
+            forgot_password_text = (TextView) findViewById(R.id.forgot_password_text);
             birthday_text = (TextView)findViewById(R.id.birthday_text);
             input_date = (DatePicker)findViewById(R.id.birthday);
             input_email=(EditText)findViewById(R.id.input_email);
@@ -100,21 +105,18 @@ public class LoginActivity extends AppCompatActivity {
             mProgressBar = (ImageView) findViewById(R.id.iv);
             input_email.setHint("Email");
             input_password.setHint("Password");
-        Backendless.initApp(this, getString(R.string.app_ID), getString(R.string.app_key));
-            final String currentUserObjectId = Backendless.UserService.loggedInUser();
-            Backendless.UserService.findById(currentUserObjectId, new AsyncCallback<BackendlessUser>() {
+            verify_account_text.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void handleResponse(BackendlessUser response) {
-                    Backendless.UserService.setCurrentUser( response );
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                }
-
-                @Override
-                public void handleFault(BackendlessFault fault) {
-
+                public void onClick(View v) {
+                    confirmUser();
                 }
             });
+        forgot_password_text.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                forgotpasswordUser();
+            }
+        });
         login_button = (AppCompatButton)findViewById(R.id.btn_login);
         login_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,7 +142,6 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(CognitoUserSession userSession, CognitoDevice newDevice) {
                             Log.d(TAG, " -- Auth Success");
-                            Toast.makeText(getBaseContext(), "signed in", Toast.LENGTH_SHORT).show();
                             AppHelper.setCurrSession(userSession);
                             AppHelper.newDevice(newDevice);
                             dialog.dismiss();
@@ -199,11 +200,13 @@ public class LoginActivity extends AppCompatActivity {
                         String firstName = input_first_name.getText().toString().trim();
                         String lastName = input_last_name.getText().toString().trim();
                         CognitoUserAttributes userAttributes = new CognitoUserAttributes();
-                        SimpleDateFormat format = new SimpleDateFormat("mm/dd/yyyy");
+                        SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
                         userAttributes.addAttribute("email", usernameInput);
                         userAttributes.addAttribute("name", firstName+" "+lastName);
                         userAttributes.addAttribute("birthdate",format.format(date1));
                         userAttributes.addAttribute("profile", "false");
+                        userAttributes.addAttribute("custom:rewardsUsed", " ");
+                        userAttributes.addAttribute("custom:birthdayYearUsed", " ");
 
 
                         SignUpHandler signUpHandler = new SignUpHandler() {
@@ -272,92 +275,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-    public void login(){
-        String userEmail = input_email.getText().toString();
-        String password = input_password.getText().toString();
 
 
-        userEmail = userEmail.trim();
-        password = password.trim();
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-        View mView = getLayoutInflater().inflate(R.layout.animation_loading, null);
-        builder.setView(mView);
-        ImageView animation = (ImageView) mView.findViewById(R.id.animation);
-        final AnimationDrawable animationDrawable1 = (AnimationDrawable)animation.getBackground();
-        animationDrawable1.start();
-        final AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getWindow().setLayout(390, 390);
-
-
-
-
-
-        Backendless.UserService.login(userEmail, password, new AsyncCallback<BackendlessUser>() {
-            @Override
-            public void handleResponse(BackendlessUser response) {
-                Log.i(TAG, "Login successful for "+ response.getEmail());
-
-                dialog.dismiss();
-                animationDrawable1.stop();
-
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
-
-            @Override
-            public void handleFault(BackendlessFault fault) {
-                Log.i(TAG, "login: " + fault.getMessage());
-                warnUser(fault.getMessage(), 1);
-                dialog.dismiss();
-                animationDrawable1.stop();
-
-
-            }
-        });
-    }
-    public void register(){
-        String email = input_email.getText().toString().trim();
-        String password = input_password.getText().toString().trim();
-        String firstName = input_first_name.getText().toString().trim();
-        String lastName = input_last_name.getText().toString().trim();
-        final Date date1=  new Date(input_date.getYear()-1900, input_date.getMonth(), input_date.getDayOfMonth());
-
-        if (!email.isEmpty() &&!password.isEmpty() && !firstName.isEmpty()&&password.length()>6&&!lastName.isEmpty()&&date1!=null) {
-            BackendlessUser user = new BackendlessUser();
-            user.setEmail(email);
-            user.setPassword(password);
-            user.setProperty("firstName", firstName);
-            user.setProperty("lastName", lastName);
-            user.setProperty("birthday", date1);
-            user.setProperty("admin", false);
-            user.setProperty("rewardsUsed", " ");
-            user.setProperty("birhtdayYear", " ");
-
-
-            Backendless.UserService.register(user, new AsyncCallback<BackendlessUser>() {
-                @Override
-                public void handleResponse(BackendlessUser response) {
-                    Log.i("register", response.toString());
-                    login();
-
-
-
-                }
-
-                @Override
-                public void handleFault(BackendlessFault fault) {
-                    Log.i("error", fault.toString());
-                    warnUser(fault.getMessage(), 2);
-
-                }
-            });
-        }
-        else{
-            warnUser(getString(R.string.empty_field_signup_error), 3);
-        }
-    }
     public void warnUser(String error, int id){
         AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
         builder.setMessage(error);
@@ -421,17 +340,34 @@ public class LoginActivity extends AppCompatActivity {
         intent.putExtra("attribute", cognitoUserCodeDeliveryDetails.getAttributeName());
         startActivityForResult(intent, 10);
     }
+    private void confirmUser() {
+        Intent confirmActivity = new Intent(this, SignUpConfirm.class);
+        confirmActivity.putExtra("source","main");
+        startActivityForResult(confirmActivity, 2);
+
+    }
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+    }
+
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 10) {
-            if(resultCode == RESULT_OK){
-                String name = null;
-                if(data.hasExtra("name")) {
-                    name = data.getStringExtra("name");
+
+                if (resultCode == RESULT_OK) {
+                    String newPass = data.getStringExtra("newPass");
+                    String code = data.getStringExtra("code");
+                    if (newPass != null && code != null) {
+                        if (!newPass.isEmpty() && !code.isEmpty()) {
+                            forgotPasswordContinuation.setPassword(newPass);
+                            forgotPasswordContinuation.setVerificationCode(code);
+                            forgotPasswordContinuation.continueTask();
+                        }
+                    }
                 }
 
-            }
-        }
+
+
     }
     private void launchUser() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -462,6 +398,50 @@ public class LoginActivity extends AppCompatActivity {
         continuation.setAuthenticationDetails(authenticationDetails);
         continuation.continueTask();
     }
+    private void forgotpasswordUser() {
+        username = input_email.getText().toString();
+        if(username == null) {
+            Toast.makeText(getBaseContext(), "username cannor be empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if(username.length() < 1) {
+            Toast.makeText(getBaseContext(), "username cannor be empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+        AppHelper.getPool().getUser(username).forgotPasswordInBackground(forgotPasswordHandler);
+    }
+    private void getForgotPasswordCode(ForgotPasswordContinuation forgotPasswordContinuation) {
+        this.forgotPasswordContinuation = forgotPasswordContinuation;
+        Intent intent = new Intent(this, ForgotPasswordActivity.class);
+        intent.putExtra("destination",forgotPasswordContinuation.getParameters().getDestination());
+        intent.putExtra("deliveryMed", forgotPasswordContinuation.getParameters().getDeliveryMedium());
+        startActivityForResult(intent, 3);
+    }
+    ForgotPasswordHandler forgotPasswordHandler = new ForgotPasswordHandler() {
+        @Override
+        public void onSuccess() {
+
+            Toast.makeText(getBaseContext(), "Password successfully changed", Toast.LENGTH_SHORT).show();
+            input_password.setText("");
+            input_password.requestFocus();
+        }
+
+        @Override
+        public void getResetCode(ForgotPasswordContinuation forgotPasswordContinuation) {
+
+            getForgotPasswordCode(forgotPasswordContinuation);
+        }
+
+        @Override
+        public void onFailure(Exception e) {
+
+            Toast.makeText(getBaseContext(), "failed to reset password", Toast.LENGTH_SHORT).show();
+        }
+    };
+
 
 }
 

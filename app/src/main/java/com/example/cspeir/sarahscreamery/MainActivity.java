@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
@@ -95,26 +96,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             logout();
             return true;
         }
+        else if(id==R.id.action_about){
+            about();
+            return true;
+        }
 
 
         return super.onOptionsItemSelected(item);
     }
-
-    public void logout(){
-        Backendless.initApp(this, getString(R.string.app_ID), getString(R.string.app_key));
-        Backendless.UserService.logout(new AsyncCallback<Void>() {
-            @Override
-            public void handleResponse(Void response) {
-
-                Intent intent = new Intent(MainActivity.this, StartActivity.class);
-                startActivity(intent);
-            }
-
-            @Override
-            public void handleFault(BackendlessFault fault) {
-                Log.i(TAG, "logout failed "+fault.getMessage());
-            }
-        });
+    public void about(){
+        contentFragment = new AboutFragment();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.content_frame, contentFragment);
+        ft.commit();
+    }
+    public void logout() {
+        Intent logout = getIntent();
+        String userId = logout.getStringExtra("name");
+        CognitoUser user = AppHelper.getPool().getUser(userId);
+        user.signOut();
+        Intent intent = new Intent(MainActivity.this, StartActivity.class);
+        startActivity(intent);
     }
     @SuppressWarnings("StatementWithEmptyBody")
     @Override

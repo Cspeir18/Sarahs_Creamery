@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:background="@color/colorAccent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="25dp"
+        android:padding="15dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Sarah's Creamery"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="v 1.0.0"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Developed by Connor Speir, Dover Area High School Senior"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Logos and images provided by Sarah's Creamery"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Artwork done by Macoy Fisher"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Sarah's Creamery Website: www.sarahscreamery.com"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15dp"
+        android:padding="10dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Powerd by: Amazon Web Services, AWS Cognito, AWS DynamoDB"/>
+
+</LinearLayout>

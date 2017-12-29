@@ -4,9 +4,15 @@
       tools:context="com.example.cspeir.sarahscreamery.StartActivity">
 
     <item
+        android:id="@+id/action_about"
+        android:title="@string/about_app"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/action_logout"
         android:orderInCategory="100"
         android:title="@string/Logout"
         app:showAsAction="never"/>
+
 
 </menu>
