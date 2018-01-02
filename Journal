@@ -13,3 +13,10 @@ I had trouble with Cognito because it was hard to sign my user in but i kept loo
 I started with DynamoDb but am having some trouble with it, monday i will ask mr linburg for help and will hopefully get more 
 progress done because after i figure that out it should be smooth sailing from there.
 
+1/2/18
+
+This week i started adding in all the features that aws provides. I looked online for tutorials and used them to help me. 
+I saved my tables to dynamodb so that the users could access them. I then added in a feature that makes it to where the user
+cannot use the reward more than once. I needed to allow the user to reset the passord, i did not know how to incorporate this, 
+so once again i researched the issue and ended up being able to succesfully adding this to my app.
+
