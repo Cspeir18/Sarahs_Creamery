@@ -7,6 +7,15 @@ your account through a code sent to your email. A user of the app can look at in
 about Sarah's Creamery and can see the various flavors theyhave to offer so they can make
 their decision before they even enter the store.
 
+Versioning
+Uses SemVer for versioning
+
+Author:
+Connor Speir
+
+## Building the app
+You can build and run the application by folling these instructions https://developer.android.com/studio/run/index.html
+
 POWERED BY:
 Amazon Web Services
 Cognito 
