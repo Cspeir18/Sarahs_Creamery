@@ -16,7 +16,7 @@ public class AboutFragment extends Fragment {
     }
     public View onCreateView(LayoutInflater inflater , ViewGroup v, Bundle bundle) {
         super.onCreateView(inflater, v, bundle);
-        View rootView = inflater.inflate(R.layout.fragment_about, v, false);
+        View rootView = inflater.inflate(R.layout.fragment_about, v, false); //has about info in the xml final
 
         return rootView;
     }

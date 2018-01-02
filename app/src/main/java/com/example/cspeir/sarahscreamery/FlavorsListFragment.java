@@ -86,12 +86,12 @@ public class FlavorsListFragment extends ListFragment {
 
             }
         };
-
+// initiates the credentials for accessing dynamodb tables
 
         //get the value of mPublicView from the intent. By default, it will be set to false (the second parameter in the call below)
 
 
-        //Create the list of trips
+        //Create the list of Flavors
         mFlavors = new ArrayList<Flavors>();
 
 
@@ -140,7 +140,7 @@ public class FlavorsListFragment extends ListFragment {
                 profile = cognitoUserDetails.getAttributes().getAttributes().get("profile");
 
                 if (profile.contains("true")){
-                    fab.setVisibility(View.VISIBLE);
+                    fab.setVisibility(View.VISIBLE); //if admin, adding new flavors is enables
                 }
             }
 
@@ -177,7 +177,7 @@ public class FlavorsListFragment extends ListFragment {
                                     DynamoDBMapper mapper = new DynamoDBMapper(ddbClient);
                                     Flavors flavor = mapper.load(Flavors.class, "Flavors");
                                     flavor.getFlavorsList().add(flavorEt.getText().toString().trim());
-                                    mapper.save(flavor);
+                                    mapper.save(flavor); //adds new flavor
                                 }
                             });
                             thread.start();
@@ -210,7 +210,7 @@ public class FlavorsListFragment extends ListFragment {
 
         switch (item.getItemId()) {
             case R.id.menu_item_delete_trip:
-                //delete the trip from the baas
+                //delete the flavor
                 deleteFlavor(flavors);
                 return true;
         }
@@ -227,7 +227,7 @@ public class FlavorsListFragment extends ListFragment {
                         Flavors flavor =mapper.load(Flavors.class, "Flavors");
                         flavor.getFlavorsList().remove(deleteFlavor.getName());
                         mapper.save(flavor);
-                        refreshFlavorList();
+                        refreshFlavorList();// deletes flavor
                     }
                     catch (Exception e){
                         e.printStackTrace();
@@ -250,7 +250,7 @@ public class FlavorsListFragment extends ListFragment {
                 for (int i=0;i<result.get(0).getFlavorsList().size();i++){
                     Flavors newflavor = new Flavors();
                     newflavor.setName(result.get(0).getFlavorsList().get(i));
-                    mFlavors.add(newflavor);
+                    mFlavors.add(newflavor); // adds the flavors it receives from dynamodb
 
                 }
 

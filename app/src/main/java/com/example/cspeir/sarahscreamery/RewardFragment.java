@@ -195,6 +195,7 @@ public class RewardFragment extends Fragment {
                                             if (Integer.parseInt(monthFormat.format(date))==1&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==12){
                                                 yearDate.setYear(yearDate.getYear()-1);
                                                 year= yearFormat.format(yearDate);
+                                                //tells dynamodb the reward was used with that user
                                             }
                                             else if(Integer.parseInt(monthFormat.format(date))==12&&Integer.parseInt(monthFormat.format(mUser.getBirthday()))==1){
                                                 yearDate.setYear(yearDate.getYear()+1);
@@ -315,7 +316,7 @@ public class RewardFragment extends Fragment {
         return "";
 
     }
-    private Bitmap TextToImageEncode(String Value) throws WriterException {
+    private Bitmap TextToImageEncode(String Value) throws WriterException { // creates qr code
         BitMatrix bitMatrix;
         try {
             bitMatrix = new MultiFormatWriter().encode(

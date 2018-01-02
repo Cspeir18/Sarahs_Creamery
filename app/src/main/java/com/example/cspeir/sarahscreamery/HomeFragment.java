@@ -85,7 +85,7 @@ public class HomeFragment extends Fragment {
 
         Intent intent = getActivity().getIntent();
         username=intent.getStringExtra("name");
-        user = AppHelper.getPool().getUser(username);
+        user = AppHelper.getPool().getUser(username); // gets the user with that username
         helloText= (TextView) rootView.findViewById(R.id.hello);
         GetDetailsHandler detailsHandler = new GetDetailsHandler() {
             @Override
@@ -104,7 +104,7 @@ public class HomeFragment extends Fragment {
 
                 Toast.makeText(getContext(), "Could not fetch user details! "+exception.getMessage(), Toast.LENGTH_SHORT).show();
             }
-        };
+        }; //
         user.getDetailsInBackground(detailsHandler);
 
         return rootView;

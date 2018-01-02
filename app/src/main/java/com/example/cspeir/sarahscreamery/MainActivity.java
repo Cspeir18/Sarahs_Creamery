@@ -38,11 +38,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String poolId = "us-east-1_PYpkY6FGt";
-        String clientId = "6fmio3n5p56a7lnmdefbf6ngt4";
-        String clientSecret = "1jehuu276sg9d5qou9bie2uge5hc6jbeo6h4iujdm69qb4h9k4k9";
+
         ClientConfiguration clientConfiguration = new ClientConfiguration();
-        final CognitoUserPool userPool = new CognitoUserPool(getBaseContext(), poolId, clientId, clientSecret, clientConfiguration);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

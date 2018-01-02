@@ -136,7 +136,7 @@ public class LoginActivity extends AppCompatActivity {
                     dialog.show();
                     dialog.getWindow().setLayout(390, 390);
 
-                    AuthenticationHandler authenticationHandler = new AuthenticationHandler() {
+                    AuthenticationHandler authenticationHandler = new AuthenticationHandler() { // login handler
 
 
                         @Override
@@ -157,7 +157,7 @@ public class LoginActivity extends AppCompatActivity {
                             authenticationContinuation.setAuthenticationDetails(authenticationDetails);
 
                             // Allow the sign-in to continue
-                            authenticationContinuation.continueTask();
+                            authenticationContinuation.continueTask(); // handles the authentication with a email code
                         }
 
                         @Override
@@ -204,7 +204,7 @@ public class LoginActivity extends AppCompatActivity {
                         userAttributes.addAttribute("email", usernameInput);
                         userAttributes.addAttribute("name", firstName+" "+lastName);
                         userAttributes.addAttribute("birthdate",format.format(date1));
-                        userAttributes.addAttribute("profile", "false");
+                        userAttributes.addAttribute("profile", "false"); // adds attributes to the new user for registration
                         userAttributes.addAttribute("custom:rewardsUsed", " ");
                         userAttributes.addAttribute("custom:birthdayYearUsed", " ");
 
@@ -343,7 +343,7 @@ public class LoginActivity extends AppCompatActivity {
     private void confirmUser() {
         Intent confirmActivity = new Intent(this, SignUpConfirm.class);
         confirmActivity.putExtra("source","main");
-        startActivityForResult(confirmActivity, 2);
+        startActivityForResult(confirmActivity, 2); //starts the activity that confirms the user
 
     }
     @Override
@@ -372,7 +372,7 @@ public class LoginActivity extends AppCompatActivity {
     private void launchUser() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("name", input_email.getText().toString().trim());
-        startActivity(intent);
+        startActivity(intent); // launches the activity where the user can navigate and view things
     }
     private void getUserAuthentication(AuthenticationContinuation continuation, String username) {
         if(username != null) {
